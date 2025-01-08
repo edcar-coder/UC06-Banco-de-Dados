@@ -1,0 +1,192 @@
+begin;
+CREATE TABLE  IF NOT EXISTS CLIENTES(
+    ID SERIAL PRIMARY KEY,
+    nome  VARCHAR(60) NOT NULL,
+    email VARCHAR (30) UNIQUE NOT NULL,
+	telefone VARCHAR(15) NULL,
+	data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+	
+);
+
+CREATE TABLE IF NOT EXISTS PRODUTOS(
+    ID SERIAL PRIMARY KEY,
+	nome_produto VARCHAR(90) NOT NULL,
+	descricao_produto TEXT,
+	preco_produto DECIMAL (10, 2) NOT NULL CHECK (preco_produto >= 0),
+	quantidade_estoque INT NOT NULL CHECK (quantidade_estoque >= 0),
+	data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP	
+);
+
+CREATE TABLE IF NOT EXISTS FUNCIONARIOS(
+    ID SERIAL PRIMARY KEY,
+	nome VARCHAR(30) NOT NULL,
+	cpf CHAR(11) NOT NULL,
+	cargo VARCHAR(60) NOT NULL,
+	salario_funcionario DECIMAL(10, 2) NOT NULL CHECK (salario_funcionario >= 0),
+	data_admissao DATE NOT NULL,
+	email VARCHAR(60) UNIQUE	
+);
+
+CREATE TABLE IF NOT EXISTS VENDAS (
+    ID SERIAL PRIMARY KEY,
+    CLIENTE_ID INT NOT NULL,
+    FUNCIONARIO_ID INT,
+    data_venda TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    total_venda DECIMAL(10, 2) NOT NULL CHECK (total_venda >= 0),
+    CONSTRAINT fk_cliente FOREIGN KEY (CLIENTE_ID) REFERENCES clientes(ID) ON DELETE CASCADE, -- Relacionamento com clientes
+    CONSTRAINT fk_funcionario FOREIGN KEY (FUNCIONARIO_ID) REFERENCES funcionarios(ID) ON DELETE SET NULL -- Relacionamento com funcionários
+);
+
+CREATE TABLE IF NOT EXISTS ITENS_VENDA(
+id SERIAL PRIMARY KEY,                        
+    venda_id INT NOT NULL,                       
+    produto_id INT,                              
+    quantidade INT NOT NULL CHECK (quantidade > 0), 
+    preco_unitario DECIMAL(10, 2) NOT NULL CHECK (preco_unitario >= 0), 
+    FOREIGN KEY (venda_id) REFERENCES vendas (id) 
+        ON DELETE CASCADE                        
+        ON UPDATE CASCADE,                       
+    FOREIGN KEY (produto_id) REFERENCES produtos (id)
+        ON DELETE SET NULL                       
+        ON UPDATE CASCADE  
+);
+
+
+
+begin;
+-- Inserção registros na tabela CLIENTES
+INSERT INTO CLIENTES (nome, email, telefone) VALUES
+('João Silva', 'joao.silva@email.com', '123456789'),
+('Maria Oliveira', 'maria.oliveira@email.com', '987654321'),
+('Carlos Souza', 'carlos.souza@email.com', '456789123'),
+('Ana Costa', 'ana.costa@email.com', '789123456'),
+('Fernanda Almeida', 'fernanda.almeida@email.com', '321654987');
+
+-- Inserção registros na tabela PRODUTOS
+INSERT INTO PRODUTOS (nome_produto, descricao_produto, preco_produto, quantidade_estoque) VALUES
+('Camiseta Polo', 'Camiseta de algodão, disponível em várias cores.', 49.90, 100),
+('Tênis Running', 'Tênis esportivo para corrida, muito confortável.', 199.90, 50),
+('Relógio Digital', 'Relógio resistente à água e com várias funcionalidades.', 120.50, 30),
+('Fone de Ouvido Bluetooth', 'Fone sem fio com excelente qualidade de som.', 150.00, 40),
+('Smartwatch', 'Relógio inteligente com diversas funções tecnológicas.', 399.90, 20);
+
+-- Inserção registros na tabela FUNCIONARIOS
+INSERT INTO FUNCIONARIOS (nome, cpf, cargo, salario_funcionario, data_admissao, email) VALUES
+('Roberto Lima', '12345678901', 'Gerente de Vendas', 3500.00, '2022-01-10', 'roberto.lima@email.com'),
+('Patrícia Santos', '98765432100', 'Atendente', 1500.00, '2021-06-15', 'patricia.santos@email.com'),
+('Gustavo Pereira', '45678912300', 'Analista de Marketing', 2500.00, '2020-08-01', 'gustavo.pereira@email.com'),
+('Juliana Martins', '32165498701', 'Assistente Administrativo', 2000.00, '2023-03-01', 'juliana.martins@email.com'),
+('Lucas Costa', '15975345602', 'Vendedor', 1800.00, '2022-07-22', 'lucas.costa@email.com');
+
+-- Inserção registros na tabela VENDAS
+INSERT INTO VENDAS (CLIENTE_ID, FUNCIONARIO_ID, total_venda) VALUES
+(1, 2, 249.90),
+(2, 3, 320.50),
+(3, 1, 550.00),
+(4, 4, 180.00),
+(5, 5, 479.90);
+
+-- Inserção 5 registros na tabela ITENS_VENDA
+INSERT INTO ITENS_VENDA (venda_id, produto_id, quantidade, preco_unitario) VALUES
+(1, 1, 2, 49.90),
+(2, 2, 1, 199.90),
+(3, 3, 3, 120.50),
+(4, 4, 1, 150.00),
+(5, 5, 1, 399.90);
+commit;
+
+select * from produtos;
+
+
+
+--1. Liste o total de vendas realizadas por cada cliente.
+select * from vendas;
+select clientes.nome, count(vendas.cliente_id) as total_venda
+from vendas
+join clientes on vendas.id = clientes.id
+group by clientes.nome
+order by clientes.nome asc;
+
+--2. Liste o total de vendas realizadas por cada funcionário.
+select * from vendas;
+select funcionarios.nome, count(vendas.funcionario_id) as total_vendas_funcionario
+from vendas
+join funcionarios on vendas.funcionario_id = funcionarios.id
+group by funcionarios.nome
+order by funcionarios.nome asc;
+
+--3. Liste a quantidade total de produtos vendidos por cada venda.
+ select * from produtos;
+ select * from vendas;--pedido
+ select * from itens_venda;--itens do pedido
+ select venda_id, sum(quantidade) as quantidade_total_itens
+ from itens_venda
+ group by venda_id;
+
+--4. Liste a quantidade total de itens vendidos por produto.
+ select * from
+ 
+--5. Liste os clientes que realizaram mais de 5 compras.
+  select * from vendas;
+  select * from itens_venda;
+  select * from clientes;
+
+  select clientes.nome , count(vendas.cliente_id) 
+  from vendas
+  join itens_venda on vendas.cliente_id = itens_venda.venda_id
+  join clientes on clientes.id = vendas.cliente_id
+  group by clientes.nome
+  having count(vendas.cliente_id) >= 1;
+
+--6. Liste os produtos que possuem mais de 50 unidades em estoque.
+  select * from produtos;
+  select produtos, quantidade_estoque
+  from produtos
+  where quantidade_estoque > 50
+  order by quantidade_estoque asc;
+
+--7. Liste os funcionários que participaram de mais de 10 vendas.
+   select * from vendas;
+   select funcionarios.nome_funcionario, count(vendas.funcionario_id) as total_venda
+   from vendas 
+   join funcionarios on funcionarios.id = vendas.funcionario_id
+   group by funcionario_id
+   having count(vendas.funcionario_id) > 10;
+
+--8. Liste os produtos cujo total vendido (quantidade) seja superior a 100 unidades.
+   select * from itens_venda;
+   select produtos.nome_produto, sum(itens_venda.quantidade) as total_produtos
+   from itens_venda
+   join produtos on itens_venda.produto_id = produtos.id
+   group by produto_id
+   having sum (itens_venda.quantidade) > = 1
+   order by total_produtos desc;
+
+--9. Calcule o valor total das vendas de cada cliente.
+   select * from vendas;
+   select clientes.nome, sum(vendas.total_venda) as total_venda
+   from vendas
+   join clientes on clientes.id = vendas.cliente_id
+   group by clientes.nome
+   order by total_venda desc;
+
+--10.Calcule o valor total das vendas realizadas por cada funcionário.
+--11.Calcule o total de itens vendidos por venda.
+--12.Calcule o total de produtos vendidos agrupados por categoria (se
+--adicionarmos uma coluna de categoria na tabela de produtos).
+--13.Calcule o total arrecadado com vendas para cada cliente.
+--14.Calcule o preço médio dos produtos em estoque.
+--15.Calcule o preço médio dos produtos vendidos por venda.
+--16.Calcule a média de salários dos funcionários.
+--17.Calcule a média do total das vendas por funcionário.
+--18.Conte quantas vendas foram realizadas por cliente.
+--19.Conte quantas vendas cada funcionário participou.
+--20.Conte quantos produtos estão cadastrados no banco.
+--21.Conte quantas vendas foram realizadas em cada dia.
+--22.Liste os clientes que realizaram mais de 5 compras, ordenados pelo
+--total de vendas.
+--23.Liste os produtos mais vendidos (em quantidade) cujo total vendido
+--ultrapassa 50 unidades.
+--24.Calcule a média de preço dos produtos vendidos em cada venda.
+--25.Liste os funcionários que participaram de vendas cujo total médio é
+--superior a R$ 5.000,00.
