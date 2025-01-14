@@ -61,7 +61,7 @@
     select * from emprestimo;
 	select extract(month from data_emprestimo) as mes, count(*) as quantidade_emprestimo
 	from emprestimo
-	group by extract (month from data_emprestimo)
+	group by mes
 	order by mes;
 
 
@@ -96,9 +96,9 @@
 
      select * from livro;
 	 select * from emprestimo;
-	 select count(id) as quantidade_livros_emprestados
+	 select count(*) as total_livros_emprestados
 	 from emprestimo
-	 where data_devolucao is null;
+	 where devolvido = false;
 	 
 
 -- 13. Unidades com mais de 60 livros cadastrados.
@@ -135,13 +135,13 @@
 
 
 -- 16. Unidades com pelo menos um empréstimo em aberto.
-     from * unidade;
-	 select unidade.nome as unidade, count(livro.id) as quantidade_livro
-	 from unidade
-	 join livro on unidade.id = livro.id_unidade
-	 group by unidade.nome
-	 having count(livro.id) > 60
-	 order by quantidade_livro desc;
-
- 
--- 
+    select * from  unidade;
+	select * from emprestimo;
+	select unidade.nome, count(emprestimo.id) as emprestimo_abertos
+    from unidade
+	join livro on unidade.id = livro.id_unidade
+	join emprestimo on livro.id = emprestimo.id_livro
+	where emprestimo.devolvido = false
+    group by unidade.nome
+	having count (emprestimo.id) > 0;
+	
